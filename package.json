@@ -1,9 +1,10 @@
 {
-  "name": "eventfullife",
-  "version": "0.0.1",
-  "description": "An EventEmitter version of Conway's Game of Life",
-  "main": "eventfullife.js",
-  "engines": {
-    "node": ">=0.10.12"
-  }
+  "name"          : "eventfullife",
+  "description"   : "Node.js EventEmitter version of Conway's Game of Life",
+  "keywords"      : ["util", "events", "eventemitter", "browserify", "jquery-browserify"],
+  "author"        : {"name": "Rob Wilburn", "url": "http://robwilburn.com"}
+  "repository"    : {"type": "git", "url": "git://github.com/robw2000/EventfulLife.git"},
+  "main"          : "eventfullife.js",
+  "version"       : "0.0.1",
+  "engines"       : {"node": ">=0.10.12"}
 }
