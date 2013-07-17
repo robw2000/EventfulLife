@@ -14,7 +14,7 @@ function buildGrid(emitDelay, updateStatusDelay) {
   for(i = 0; i < lifeGridHeight; i++) {
     var row = $('<tr></tr>');
     for (j = 0; j < lifeGridWidth; j++) {
-      var td = $('<td></td>').addClass('cellOff').attr('id', 'cell_' + j + '_' + i);
+      var td = $('<td></td>').attr('id', 'cell_' + j + '_' + i);
       row.append(td);
     }
     table.append(row);
