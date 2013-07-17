@@ -664,6 +664,7 @@ EventfulLife.prototype.shotgun = function() {
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j].isPaused = true;
+      this.grid[i][j].turnOff();
     }
   }
 
