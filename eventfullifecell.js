@@ -40,6 +40,8 @@ EventfulLifeCell.prototype.turnOff = function() {
 }
 
 EventfulLifeCell.prototype.subscribeTo = function(neighbor) {
+  if (this.cellId == neighbor.cellId) return;
+  
   var self = this;
   neighbor.on('turnedOn', function() {
     self.neighborCount++;
