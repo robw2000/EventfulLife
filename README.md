@@ -7,9 +7,9 @@ Check out the example html page to see Eventful Life in action.
 
 To install use:
 
-  npm install eventfullife
+    npm install eventfullife
 
 To run the eventfullife.html page, first install browserify and jquery-browserify:
 
-  npm install -g browserify
-  npm install jquery-browserify
+    npm install -g browserify
+    npm install jquery-browserify
