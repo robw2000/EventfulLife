@@ -1,0 +1,9 @@
+{
+  "name": "eventfullife",
+  "version": "0.0.1",
+  "description": "An EventEmitter version of Conway's Game of Life",
+  "main": "eventfullife.js",
+  "engines": {
+    "node": ">=0.10.12"
+  }
+}
