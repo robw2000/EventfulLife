@@ -1,8 +1,7 @@
 var util = require('util')
   , events = require('events');
 
-var EventfulLifeCell = module.exports = function(parentContainer, x, y, gridWidth, gridHeight, uiGridObject, setUiGridObjectState) {
-  this.parentContainer = parentContainer;
+var EventfulLifeCell = module.exports = function(x, y, gridWidth, gridHeight, uiGridObject, setUiGridObjectState, emitDelay, updateStatusDelay) {
   this.x = Number(x);
   this.y = Number(y);
   this.gridWidth = Number(gridWidth);
@@ -12,11 +11,9 @@ var EventfulLifeCell = module.exports = function(parentContainer, x, y, gridWidt
   this.cellId = 'cell_' + x + '_' + y;
   this.neighborCount = 0;
   this.isOn = false;
-  this.listenersSet = false;
-  this.turnOnEventName = 'cellTurnedOn';
-  this.turnedOffEventName = 'cellTurnedOff';
-  this.updateStateEventName = 'updateCellState';
-  this.updateRequested = false;
+  this.isPaused = true;
+  this.emitDelay = emitDelay;
+  this.updateStateDelay = updateStatusDelay;
   events.EventEmitter.call(this);
 }
 
@@ -27,7 +24,8 @@ EventfulLifeCell.prototype.turnOn = function() {
     this.isOn = true;
     this.setUiGridObjectState(this.uiGridObject, true);
 
-    this.emit(this.turnOnEventName);
+    var self = this;
+    setTimeout(function(){self.emit('turnedOn');}, self.emitDelay);
   }
 }
 
@@ -36,32 +34,20 @@ EventfulLifeCell.prototype.turnOff = function() {
     this.isOn = false;
     this.setUiGridObjectState(this.uiGridObject, false);
 
-    this.emit(this.turnedOffEventName);
+    var self = this;
+    setTimeout(function(){self.emit('turnedOff');}, self.emitDelay);
   }
-}
-
-EventfulLifeCell.prototype.subscribeToSelf = function() {
-  var self = this;
-  this.on(this.updateStateEventName, function() {self.updateState()});
 }
 
 EventfulLifeCell.prototype.subscribeTo = function(neighbor) {
   if (this.cellId == neighbor.cellId) return;
-
+  
   var self = this;
-  neighbor.on(this.turnOnEventName, function() {
-      self.neighborCount++;
-      if (!self.isPaused && !self.updateRequested) {
-        self.updateRequested = true;
-        self.emit(self.updateStateEventName);
-      }
+  neighbor.on('turnedOn', function() {
+    self.neighborCount++;
     });
-  neighbor.on(this.turnedOffEventName, function() {
-      self.neighborCount--;
-      if (!self.isPaused && !self.updateRequested) {
-        self.updateRequested = true;
-        self.emit(self.updateStateEventName);
-      }
+  neighbor.on('turnedOff', function() {
+    self.neighborCount--;
     });
 }
 
@@ -72,6 +58,7 @@ EventfulLifeCell.prototype.updateState = function() {
     } else {
       if (this.neighborCount == 3) this.turnOn();
     }
-    this.updateRequested = false;
   }
+  var self = this;
+  setTimeout(function(){self.updateState()}, self.updateStateDelay);
 }

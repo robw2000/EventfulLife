@@ -2,7 +2,7 @@ var $ = require('jquery-browserify')
   , EventfulLife = require('../eventfullife');
 
 var eventfulLife;
-function buildGrid(emitDelay, updateStatusDelay) {
+function buildGrid() {
 
   var lifeGridWidth = 100;
   var lifeGridHeight = 100;
@@ -38,9 +38,8 @@ function buildGrid(emitDelay, updateStatusDelay) {
     }
   }
 
-  emitDelay = emitDelay || 1;
-  updateStatusDelay = updateStatusDelay || 0;
-  eventfulLife = new EventfulLife(lifeGridWidth, lifeGridHeight, cells, setCellState, emitDelay, updateStatusDelay);
+  eventfulLife = new EventfulLife(lifeGridWidth, lifeGridHeight, cells, setCellState);
+  eventfulLife.init();
   eventfulLife.start();
 }
 
@@ -48,5 +47,5 @@ function resetGrid() {eventfulLife.shotgun()}
 
 $(document).ready(function() {
   $('#resetButton').on('click', resetGrid);
-  buildGrid(1, 0);
+  buildGrid();
   });
