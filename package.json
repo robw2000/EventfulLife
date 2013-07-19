@@ -5,6 +5,5 @@
   "author"        : {"name": "Rob Wilburn", "email": "rob@mathist.net", "url": "http://robwilburn.com"},
   "repository"    : {"type": "git", "url": "git://github.com/robw2000/EventfulLife.git"},
   "main"          : "eventfullife.js",
-  "version"       : "0.0.3",
-  "engines"       : {"node": ">=0.10.12"}
+  "version"       : "0.0.4"
 }
