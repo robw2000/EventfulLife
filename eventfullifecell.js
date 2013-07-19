@@ -24,6 +24,14 @@ var EventfulLifeCell = module.exports = function(parentContainer, x, y, gridWidt
 
 util.inherits(EventfulLifeCell, events.EventEmitter);
 
+EventfulLifeCell.prototype.clear = function() {
+  if (this.debug) console.log('cell_' + this.x + '_' + this.y + '.clear()');
+  this.isOn = false;
+  this.setUiGridObjectState(this.uiGridObject, false);
+  this.neighborCount = 0;
+  this.isPaused = true;
+}
+
 EventfulLifeCell.prototype.turnOn = function() {
   if (this.debug) console.log('cell_' + this.x + '_' + this.y + '.turnOn()');
   if (!this.isOn) {

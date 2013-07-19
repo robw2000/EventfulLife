@@ -76,12 +76,12 @@ EventfulLife.prototype.shotgun = function() {
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j].isPaused = true;
-      this.grid[i][j].turnOff();
     }
   }
 
   var maxRadius = Math.sqrt(this.gridWidth * this.gridHeight) / 3;
-  var pelletCount = Math.floor(Math.pow(Math.random(), 3) * this.gridWidth * this.gridHeight / 2);
+  var pelletCount = Math.floor(Math.pow(Math.random(), 2) * this.gridWidth * this.gridHeight / 2);
+  if (pelletCount < this.gridWidth * this.gridHeight / 10) pelletCount = this.gridWidth * this.gridHeight / 10;
   var centerX = Math.floor(Math.random() * this.gridWidth);
   var centerY = Math.floor(Math.random() * this.gridHeight);
   for (var i = 0; i < pelletCount; i++) {

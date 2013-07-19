@@ -77,12 +77,12 @@ EventfulLife.prototype.shotgun = function() {
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j].isPaused = true;
-      this.grid[i][j].turnOff();
     }
   }
 
   var maxRadius = Math.sqrt(this.gridWidth * this.gridHeight) / 3;
-  var pelletCount = Math.floor(Math.pow(Math.random(), 3) * this.gridWidth * this.gridHeight / 2);
+  var pelletCount = Math.floor(Math.pow(Math.random(), 2) * this.gridWidth * this.gridHeight / 2);
+  if (pelletCount < this.gridWidth * this.gridHeight / 10) pelletCount = this.gridWidth * this.gridHeight / 10;
   var centerX = Math.floor(Math.random() * this.gridWidth);
   var centerY = Math.floor(Math.random() * this.gridHeight);
   for (var i = 0; i < pelletCount; i++) {
@@ -127,6 +127,14 @@ var EventfulLifeCell = module.exports = function(parentContainer, x, y, gridWidt
 }
 
 util.inherits(EventfulLifeCell, events.EventEmitter);
+
+EventfulLifeCell.prototype.clear = function() {
+  if (this.debug) console.log('cell_' + this.x + '_' + this.y + '.clear()');
+  this.isOn = false;
+  this.setUiGridObjectState(this.uiGridObject, false);
+  this.neighborCount = 0;
+  this.isPaused = true;
+}
 
 EventfulLifeCell.prototype.turnOn = function() {
   if (this.debug) console.log('cell_' + this.x + '_' + this.y + '.turnOn()');
