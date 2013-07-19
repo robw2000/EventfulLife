@@ -9,55 +9,67 @@ var EventfulLife = module.exports = function(gridWidth, gridHeight, uiGridObject
   this.setUiGridObjectState = setUiGridObjectState;
   this.pauseEventName = 'GridPause';
   this.unpauseEventName = 'GridUnpause';
+  this.initGrid();
   events.EventEmitter.call(this);
+
+  //console.log('eventfulLife instantiated');
 }
 
-util.inherits(EventfulLifeCell, events.EventEmitter);
+util.inherits(EventfulLife, events.EventEmitter);
 
-EventfulLife.prototype.init = function() {
+EventfulLife.prototype.initGrid = function() {
+  this.setMaxListeners(0);
+
+  //console.log('eventfulLife.initGrid');
   this.grid = new Array(this.gridWidth);
   for (var i = 0; i < this.gridWidth; i++) {
     this.grid[i] = new Array(this.gridHeight);
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j] = new EventfulLifeCell(this, i, j, this.gridWidth, this.gridHeight, this.uiGridObjects[i][j], this.setUiGridObjectState);
+      this.grid[i][j].setMaxListeners(0);
+      //console.log('cell_' + i + '_' + j, this.grid[i][j]);
     }
   }
-
-  this._createSubscriptions();
 }
 
 EventfulLife.prototype._createSubscriptions = function() {
+  //console.log('eventfulLife._createSubscriptions - this: ', this);
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
-      this._createSelfAndParentSubscriptions(i, j);
+      this._createSubscriptionToParent(i, j);
       this._createNeighborSubscriptions(i, j);
     }
   }
 }
 
-EventfulLife.prototype._createSelfAndParentSubscriptions = function(x, y) {
+EventfulLife.prototype._createSubscriptionToParent = function(x, y) {
   var cell = this.grid[x][y];
-  cell.subscribeToSelf();
-  //this.parentContainer.on(this.parentContainer.pauseEventName, function(){self.isPaused = true;});
-  //this.parentContainer.on(this.parentContainer.unpauseEventName, function(){self.isPaused = false; self.updateState();});
+  this.on(this.pauseEventName, function(){cell.isPaused = true;});
+  this.on(this.unpauseEventName, function(){cell.isPaused = false; cell.requestUpdateState();});
 }
 
 EventfulLife.prototype._createNeighborSubscriptions = function(x, y) {
+  //console.log('eventfulLife._createNeighborSubscriptions - this: ', this);
   for (var i = x - 1; i < x + 2; i++) {
     var a = (i + this.gridWidth) % this.gridWidth;
     for (var j = y - 1; j < y + 2; j++) {
       var b = (j + this.gridHeight) % this.gridHeight;
+      //console.log('subscribing cell_' + x + '_' + y + ' to cell_' + a + '_' + b);
+      //console.log('cell_' + x + '_' + y, this.grid[x][y]);
+      //console.log('cell_' + a + '_' + b, this.grid[a][b]);
       this.grid[x][y].subscribeTo(this.grid[a][b]);
     }
   }
 }
 
 EventfulLife.prototype.start = function() {
+  //console.log('eventfulLife.start');
+  this._createSubscriptions();
   this.shotgun();
 }
 
 EventfulLife.prototype.stop = function() {
-  clearTimeout(this.shotgunTimeoutId);
+  //console.log('eventfulLife.stop');
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j].isPaused = true;
@@ -66,12 +78,13 @@ EventfulLife.prototype.stop = function() {
 }
 
 EventfulLife.prototype.shotgun = function() {
+  //console.log('eventfulLife.shotgun');
   var self = this;
-  this.emit(this.pauseEventName);
 
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
-      setImmediate(function(){self.grid[i][j].turnOff()});
+      this.grid[i][j].isPaused = true;
+      this.grid[i][j].turnOff();
     }
   }
 
@@ -84,8 +97,12 @@ EventfulLife.prototype.shotgun = function() {
     var radius = Math.pow(Math.random(), 2) * maxRadius;
     var x = Math.floor((radius * Math.cos(direction) + centerX + this.gridWidth) % this.gridWidth);
     var y = Math.floor((radius * Math.sin(direction) + centerY + this.gridHeight) % this.gridHeight);
-    setImmediate(function(){self.grid[x][y].turnOn()});
+    this.grid[x][y].turnOn();
   }
 
-  this.emit(this.unpauseEventName);
+  for (var i = 0; i < this.gridWidth; i++) {
+    for (var j = 0; j < this.gridHeight; j++) {
+      this.grid[i][j].isPaused = false;
+    }
+  }
 }

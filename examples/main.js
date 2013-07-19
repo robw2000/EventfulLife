@@ -4,8 +4,8 @@ var $ = require('jquery-browserify')
 var eventfulLife;
 function buildGrid() {
 
-  var lifeGridWidth = 100;
-  var lifeGridHeight = 100;
+  var lifeGridWidth = 10;
+  var lifeGridHeight = 10;
 
   var lifeGridContainer = $('#lifeGridContainer');
 
@@ -39,7 +39,6 @@ function buildGrid() {
   }
 
   eventfulLife = new EventfulLife(lifeGridWidth, lifeGridHeight, cells, setCellState);
-  eventfulLife.init();
   eventfulLife.start();
 }
 

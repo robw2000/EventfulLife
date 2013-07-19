@@ -603,55 +603,67 @@ var EventfulLife = module.exports = function(gridWidth, gridHeight, uiGridObject
   this.setUiGridObjectState = setUiGridObjectState;
   this.pauseEventName = 'GridPause';
   this.unpauseEventName = 'GridUnpause';
+  this.initGrid();
   events.EventEmitter.call(this);
+
+  //console.log('eventfulLife instantiated');
 }
 
-util.inherits(EventfulLifeCell, events.EventEmitter);
+util.inherits(EventfulLife, events.EventEmitter);
 
-EventfulLife.prototype.init = function() {
+EventfulLife.prototype.initGrid = function() {
+  this.setMaxListeners(0);
+
+  //console.log('eventfulLife.initGrid');
   this.grid = new Array(this.gridWidth);
   for (var i = 0; i < this.gridWidth; i++) {
     this.grid[i] = new Array(this.gridHeight);
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j] = new EventfulLifeCell(this, i, j, this.gridWidth, this.gridHeight, this.uiGridObjects[i][j], this.setUiGridObjectState);
+      this.grid[i][j].setMaxListeners(0);
+      //console.log('cell_' + i + '_' + j, this.grid[i][j]);
     }
   }
-
-  this._createSubscriptions();
 }
 
 EventfulLife.prototype._createSubscriptions = function() {
+  //console.log('eventfulLife._createSubscriptions - this: ', this);
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
-      this._createSelfAndParentSubscriptions(i, j);
+      this._createSubscriptionToParent(i, j);
       this._createNeighborSubscriptions(i, j);
     }
   }
 }
 
-EventfulLife.prototype._createSelfAndParentSubscriptions = function(x, y) {
+EventfulLife.prototype._createSubscriptionToParent = function(x, y) {
   var cell = this.grid[x][y];
-  cell.subscribeToSelfAndParent();
-  //this.parentContainer.on(this.parentContainer.pauseEventName, function(){self.isPaused = true;});
-  //this.parentContainer.on(this.parentContainer.unpauseEventName, function(){self.isPaused = false; self.updateState();});
+  this.on(this.pauseEventName, function(){cell.isPaused = true;});
+  this.on(this.unpauseEventName, function(){cell.isPaused = false; cell.requestUpdateState();});
 }
 
 EventfulLife.prototype._createNeighborSubscriptions = function(x, y) {
+  //console.log('eventfulLife._createNeighborSubscriptions - this: ', this);
   for (var i = x - 1; i < x + 2; i++) {
     var a = (i + this.gridWidth) % this.gridWidth;
     for (var j = y - 1; j < y + 2; j++) {
       var b = (j + this.gridHeight) % this.gridHeight;
+      //console.log('subscribing cell_' + x + '_' + y + ' to cell_' + a + '_' + b);
+      //console.log('cell_' + x + '_' + y, this.grid[x][y]);
+      //console.log('cell_' + a + '_' + b, this.grid[a][b]);
       this.grid[x][y].subscribeTo(this.grid[a][b]);
     }
   }
 }
 
 EventfulLife.prototype.start = function() {
+  //console.log('eventfulLife.start');
+  this._createSubscriptions();
   this.shotgun();
 }
 
 EventfulLife.prototype.stop = function() {
-  clearTimeout(this.shotgunTimeoutId);
+  //console.log('eventfulLife.stop');
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
       this.grid[i][j].isPaused = true;
@@ -660,12 +672,13 @@ EventfulLife.prototype.stop = function() {
 }
 
 EventfulLife.prototype.shotgun = function() {
+  //console.log('eventfulLife.shotgun');
   var self = this;
-  this.emit(this.pauseEventName);
 
   for (var i = 0; i < this.gridWidth; i++) {
     for (var j = 0; j < this.gridHeight; j++) {
-      setImmediate(function(){self.grid[i][j].turnOff()});
+      this.grid[i][j].isPaused = true;
+      this.grid[i][j].turnOff();
     }
   }
 
@@ -678,10 +691,14 @@ EventfulLife.prototype.shotgun = function() {
     var radius = Math.pow(Math.random(), 2) * maxRadius;
     var x = Math.floor((radius * Math.cos(direction) + centerX + this.gridWidth) % this.gridWidth);
     var y = Math.floor((radius * Math.sin(direction) + centerY + this.gridHeight) % this.gridHeight);
-    setImmediate(function(){self.grid[x][y].turnOn()});
+    this.grid[x][y].turnOn();
   }
 
-  this.emit(this.unpauseEventName);
+  for (var i = 0; i < this.gridWidth; i++) {
+    for (var j = 0; j < this.gridHeight; j++) {
+      this.grid[i][j].isPaused = false;
+    }
+  }
 }
 
 },{"./eventfullifecell":5,"events":1,"util":2}],5:[function(require,module,exports){
@@ -699,17 +716,20 @@ var EventfulLifeCell = module.exports = function(parentContainer, x, y, gridWidt
   this.cellId = 'cell_' + x + '_' + y;
   this.neighborCount = 0;
   this.isOn = false;
-  this.listenersSet = false;
+  this.isPaused = true;
   this.turnOnEventName = 'cellTurnedOn';
   this.turnedOffEventName = 'cellTurnedOff';
   this.updateStateEventName = 'updateCellState';
   this.updateRequested = false;
   events.EventEmitter.call(this);
+
+  //console.log('cell_' + this.x + '_' + this.y + ' instantiated');
 }
 
 util.inherits(EventfulLifeCell, events.EventEmitter);
 
 EventfulLifeCell.prototype.turnOn = function() {
+  //console.log('cell_' + this.x + '_' + this.y + '.turnOn()');
   if (!this.isOn) {
     this.isOn = true;
     this.setUiGridObjectState(this.uiGridObject, true);
@@ -719,6 +739,7 @@ EventfulLifeCell.prototype.turnOn = function() {
 }
 
 EventfulLifeCell.prototype.turnOff = function() {
+  //console.log('cell_' + this.x + '_' + this.y + '.turnOff()');
   if (this.isOn) {
     this.isOn = false;
     this.setUiGridObjectState(this.uiGridObject, false);
@@ -727,39 +748,42 @@ EventfulLifeCell.prototype.turnOff = function() {
   }
 }
 
-EventfulLifeCell.prototype.subscribeToSelfAndParent = function() {
-  var self = this;
-  this.on(this.updateStateEventName, function() {self.updateState()});
+EventfulLifeCell.prototype.requestUpdateState = function() {
+  console.log(this.cellId + '.requestUpdateState()');
+  this.emit(this.updateStateEventName);
 }
 
 EventfulLifeCell.prototype.subscribeTo = function(neighbor) {
-  if (this.cellId == neighbor.cellId) return;
-
+  //console.log('cell_' + this.x + '_' + this.y + '.subscribeTo(cell_' + neighbor.x + '_' + neighbor.y + ')');
   var self = this;
-  neighbor.on(this.turnOnEventName, function() {
-      self.neighborCount++;
-      if (!self.isPaused && !self.updateRequested) {
-        self.updateRequested = true;
-        self.emit(self.updateStateEventName);
-      }
-    });
-  neighbor.on(this.turnedOffEventName, function() {
-      self.neighborCount--;
-      if (!self.isPaused && !self.updateRequested) {
-        self.updateRequested = true;
-        self.emit(self.updateStateEventName);
-      }
-    });
+  if (this.cellId == neighbor.cellId) {
+    neighbor.once(this.updateStateEventName, function() {self.updateState()});
+  } else {
+    neighbor.on(this.turnOnEventName, function() {
+        console.log('cell_' + self.x + '_' + self.y + ' neighbor turnOnEvent triggered');
+        self.neighborCount++;
+        self.requestUpdateState();
+      });
+    neighbor.on(this.turnedOffEventName, function() {
+        console.log('cell_' + self.x + '_' + self.y + ' neighbor turnOffEvent triggered');
+        self.neighborCount--;
+        self.requestUpdateState();
+      });
+  }
 }
 
 EventfulLifeCell.prototype.updateState = function() {
-  if (!this.isPaused) {
+  var self = this;
+  this.once(this.updateStateEventName, function() {self.updateState()});
+  //console.log('cell_' + this.x + '_' + this.y + '.updateState()');
+  if (this.isPaused) {
+    this.requestUpdateState();
+  } else {
     if (this.isOn) {
       if (this.neighborCount < 2 || this.neighborCount > 3) this.turnOff();
     } else {
       if (this.neighborCount == 3) this.turnOn();
     }
-    this.updateRequested = false;
   }
 }
 
@@ -770,8 +794,8 @@ var $ = require('jquery-browserify')
 var eventfulLife;
 function buildGrid() {
 
-  var lifeGridWidth = 100;
-  var lifeGridHeight = 100;
+  var lifeGridWidth = 10;
+  var lifeGridHeight = 10;
 
   var lifeGridContainer = $('#lifeGridContainer');
 
@@ -805,7 +829,6 @@ function buildGrid() {
   }
 
   eventfulLife = new EventfulLife(lifeGridWidth, lifeGridHeight, cells, setCellState);
-  eventfulLife.init();
   eventfulLife.start();
 }
 
